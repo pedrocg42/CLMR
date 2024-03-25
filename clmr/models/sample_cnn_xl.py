@@ -1,11 +1,11 @@
-import torch
 import torch.nn as nn
-from .model import Model
+from torch import Tensor
+from clmr.models.model import Model
 
 
 class SampleCNNXL(Model):
-    def __init__(self, strides, supervised, out_dim):
-        super(SampleCNN, self).__init__()
+    def __init__(self, strides: list[int], supervised: bool = False, out_dim: int = 0):
+        super().__init__()
 
         self.strides = strides
         self.supervised = supervised
@@ -56,12 +56,13 @@ class SampleCNNXL(Model):
         if self.supervised:
             self.dropout = nn.Dropout(0.5)
         self.fc = nn.Linear(2048, out_dim)
-
-    def forward(self, x):
+        
+    def forward_features(self, x: Tensor) -> Tensor:
         out = self.sequential(x)
         if self.supervised:
             out = self.dropout(out)
 
-        out = out.reshape(x.shape[0], out.size(1) * out.size(2))
+    def forward(self, x: Tensor) -> Tensor:
+        out = self.forward_features(x)
         logit = self.fc(out)
         return logit
